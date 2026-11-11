@@ -1,26 +1,550 @@
 @import "tailwindcss";
 
+/* =========================================================
+   HBE INTERNATIONAL LIGHT DESIGN SYSTEM
+   ========================================================= */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --hbe-white: #ffffff;
+  --hbe-ivory: #f7f4ef;
+  --hbe-soft: #efebe5;
+
+  --hbe-text: #171717;
+  --hbe-text-soft: #5f5b55;
+
+  --hbe-charcoal: #171513;
+  --hbe-deep: #0d0c0b;
+
+  --hbe-gold: #c6a24a;
+  --hbe-gold-light: #e0c273;
+  --hbe-gold-dark: #8c6d24;
+
+  --hbe-red: #941f25;
+
+  --hbe-border: #e5e0d8;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* =========================================================
+   RESET
+   ========================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  background: var(--hbe-white);
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+
+  background: var(--hbe-white);
+  color: var(--hbe-text);
+
   font-family: Arial, Helvetica, sans-serif;
+
+  line-height: 1.6;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =========================================================
+   TYPOGRAPHY
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  color: var(--hbe-text);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin: 0;
+  color: var(--hbe-text-soft);
+}
+
+strong {
+  color: var(--hbe-text);
+}
+
+::selection {
+  background: var(--hbe-gold);
+  color: #111;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a {
+  color: inherit;
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+header {
+  background: rgba(255, 255, 255, 0.98);
+
+  border-bottom: 1px solid var(--hbe-border);
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.06);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  color: var(--hbe-text);
+}
+
+header nav a {
+  position: relative;
+  color: #23211f;
+  font-weight: 800;
+}
+
+header nav a::after {
+  content: "";
+
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+
+  width: 0;
+  height: 3px;
+
+  background: var(--hbe-gold);
+
+  transition: width 0.25s ease;
+}
+
+header nav a:hover {
+  color: var(--hbe-red);
+}
+
+header nav a:hover::after {
+  width: 100%;
+}
+
+/* =========================================================
+   MAIN
+   ========================================================= */
+
+main {
+  min-height: 100vh;
+  background: var(--hbe-white);
+  color: var(--hbe-text);
+}
+
+/* =========================================================
+   LIGHT SECTION SYSTEM
+   ========================================================= */
+
+.hbe-section-white {
+  background: var(--hbe-white);
+  color: var(--hbe-text);
+}
+
+.hbe-section-soft {
+  background: var(--hbe-ivory);
+  color: var(--hbe-text);
+}
+
+.hbe-section-gray {
+  background: var(--hbe-soft);
+  color: var(--hbe-text);
+}
+
+/* only use when intentionally needed */
+.hbe-section-dark {
+  background:
+    linear-gradient(
+      135deg,
+      #1d1a17,
+      #0d0c0b
+    );
+
+  color: white;
+}
+
+.hbe-section-dark h1,
+.hbe-section-dark h2,
+.hbe-section-dark h3 {
+  color: white;
+}
+
+.hbe-section-dark p {
+  color: #c4bfb7;
+}
+
+/* =========================================================
+   BRAND ACCENTS
+   ========================================================= */
+
+.hbe-kicker {
+  color: var(--hbe-red);
+
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+}
+
+.hbe-divider {
+  width: 72px;
+  height: 4px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--hbe-red),
+      var(--hbe-gold)
+    );
+}
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+.hbe-card {
+  overflow: hidden;
+
+  background: var(--hbe-white);
+
+  border: 1px solid var(--hbe-border);
+
+  box-shadow:
+    0 14px 35px rgba(0, 0, 0, 0.08);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.hbe-card:hover {
+  transform: translateY(-5px);
+
+  border-color: rgba(198, 162, 74, 0.55);
+
+  box-shadow:
+    0 22px 50px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.hbe-button-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 14px 26px;
+
+  background: var(--hbe-red);
+  border: 1px solid var(--hbe-red);
+
+  color: white;
+
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hbe-button-primary:hover {
+  background: #74181d;
+  border-color: #74181d;
+
+  color: white;
+
+  transform: translateY(-2px);
+}
+
+.hbe-button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 14px 26px;
+
+  background: transparent;
+
+  border: 1px solid #23211f;
+
+  color: #23211f;
+
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hbe-button-secondary:hover {
+  background: #23211f;
+
+  color: white;
+}
+
+/* gold option */
+.hbe-button-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 14px 26px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--hbe-gold-light),
+      var(--hbe-gold)
+    );
+
+  border: 1px solid var(--hbe-gold-dark);
+
+  color: #111;
+
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hbe-button-gold:hover {
+  color: #111;
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   TABLES
+   ========================================================= */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #171717;
+  color: white;
+}
+
+th {
+  color: white;
+}
+
+tbody tr {
+  background: white;
+
+  border-bottom: 1px solid var(--hbe-border);
+
+  transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+  background: #faf7f2;
+}
+
+/* =========================================================
+   FORMS
+   ========================================================= */
+
+input,
+textarea,
+select {
+  background: white;
+
+  border: 1px solid #d8d2ca;
+
+  color: #1a1816;
+
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #8c857c;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--hbe-gold);
+
+  box-shadow:
+    0 0 0 3px rgba(198, 162, 74, 0.13);
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+footer {
+  position: relative;
+
+  background:
+    linear-gradient(
+      135deg,
+      #1b1815,
+      #0b0a09
+    );
+
+  color: white;
+
+  border-top: 4px solid var(--hbe-gold);
+}
+
+footer::before {
+  content: "";
+
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      var(--hbe-gold),
+      transparent
+    );
+
+  opacity: 0.5;
+}
+
+footer h2,
+footer h3 {
+  color: white;
+}
+
+footer p {
+  color: #aaa49b;
+}
+
+footer a {
+  color: #ddd7ce;
+}
+
+footer a:hover {
+  color: var(--hbe-gold-light);
+}
+
+/* =========================================================
+   IMAGES
+   ========================================================= */
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  h1 {
+    line-height: 0.95;
+  }
+}
+
+/* =========================================================
+   IMAGE BACKGROUND TEXT SAFETY
+   ========================================================= */
+
+.hbe-image-copy {
+  color: #ffffff;
+  text-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.95),
+    0 4px 16px rgba(0, 0, 0, 0.65);
+}
+
+.hbe-image-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.92) 0%,
+      rgba(0, 0, 0, 0.72) 45%,
+      rgba(0, 0, 0, 0.24) 100%
+    );
+}
+
+/* =========================================
+   HBE SECONDARY HERO CTA
+   Professional subtle pulse
+========================================= */
+
+@keyframes hbeSecondaryCtaPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0
+      rgba(255, 255, 255, 0);
+
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 7px
+      rgba(255, 255, 255, 0.16);
+
+    transform: scale(1.015);
+  }
+}
+
+.hbe-secondary-cta {
+  animation:
+    hbeSecondaryCtaPulse
+    3.5s
+    ease-in-out
+    infinite;
+
+  will-change:
+    transform,
+    box-shadow;
+}
+
+.hbe-secondary-cta:hover {
+  animation: none;
+  transform: scale(1);
+}
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  .hbe-secondary-cta {
+    animation: none;
+    transform: none;
+  }
 }
