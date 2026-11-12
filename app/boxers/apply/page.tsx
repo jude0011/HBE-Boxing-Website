@@ -694,7 +694,7 @@ export default function BoxerApplicationPage() {
           HERO
           ===================================== */}
       <section
-        className="relative overflow-hidden bg-cover bg-center bg-no-repeat"
+        className="relative overflow-hidden bg-[#171717] bg-[length:100%_auto] bg-top bg-no-repeat sm:bg-cover sm:bg-center"
         style={{
           backgroundImage:
             "url('/images/boxers-hero.png')",
@@ -1277,10 +1277,6 @@ export default function BoxerApplicationPage() {
 
                     <option value="Debut">
                       Professional Debut
-                    </option>
-
-                    <option value="Amateur Transition">
-                      Amateur Transition
                     </option>
 
                   </select>
