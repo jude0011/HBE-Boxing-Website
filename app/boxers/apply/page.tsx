@@ -7,8 +7,6 @@ import {
   useState,
 } from "react";
 
-import Link from "next/link";
-
 import { createClient } from "@/app/lib/supabase/client";
 
 type Division = {
@@ -691,105 +689,29 @@ export default function BoxerApplicationPage() {
     <main className="min-h-screen bg-white text-[#171717]">
 
       {/* =====================================
-          HERO
-          ===================================== */}
-      <section
-        className="relative overflow-hidden bg-[#171717] bg-[length:100%_auto] bg-top bg-no-repeat sm:bg-cover sm:bg-center"
-        style={{
-          backgroundImage:
-            "url('/images/boxers-hero.png')",
-        }}
-      >
-
-        <div className="absolute inset-0 bg-black/55" />
-
-        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/15 to-transparent" />
-
-        <div className="relative mx-auto flex min-h-[520px] max-w-7xl items-start px-4 pb-14 pt-12 sm:min-h-[560px] sm:items-center sm:px-6 sm:py-16 lg:px-8">
-
-          <div className="max-w-4xl">
-
-            <p className="text-xs font-black uppercase tracking-[0.32em] text-[#e0c273] sm:text-sm">
-              Heritage Boxing Entertainment
-            </p>
-
-            <h1 className="mt-4 max-w-4xl text-4xl font-black uppercase leading-[1.05] tracking-[-0.02em] text-white drop-shadow-[0_3px_10px_rgba(0,0,0,0.65)] sm:text-6xl lg:text-7xl">
-              Apply To HBE
-            </h1>
-
-            <p className="mt-7 max-w-3xl text-lg font-medium leading-8 text-white/95 sm:text-xl">
-              Professional and debut fighters can
-              submit their boxing profile for
-              consideration by Heritage Boxing
-              Entertainment.
-            </p>
-
-            <div className="mt-7">
-
-              <Link
-                href="/boxers"
-                className="inline-flex min-h-[52px] w-full items-center justify-center border-2 border-white bg-white px-7 py-3 text-sm font-black uppercase tracking-wide text-[#171717] transition hover:border-[#c6a24a] hover:bg-[#c6a24a] sm:w-auto"
-              >
-                View HBE Boxers
-              </Link>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* =====================================
-          INTRO
-          ===================================== */}
-      <section className="border-b border-[#e5e0d8] bg-[#f7f4ef]">
-
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-
-          <div className="max-w-4xl">
-
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#941f25]">
-              Fighter Recruitment
-            </p>
-
-            <h2 className="mt-3 text-3xl font-black uppercase sm:text-4xl">
-              Official Boxer Application
-            </h2>
-
-            <div className="mt-5 h-1 w-20 bg-[#c6a24a]" />
-
-            <p className="mt-6 leading-8 text-[#5f5b55]">
-              Complete the application as accurately
-              as possible. HBE will review your
-              personal information, boxing
-              experience, professional record,
-              ranking information and career
-              background.
-            </p>
-
-            <p className="mt-4 leading-8 text-[#5f5b55]">
-              Submission of an application does not
-              guarantee acceptance or an HBE boxer
-              profile. Approved applicants can be
-              added to the official HBE boxer
-              database by the HBE administration
-              team.
-            </p>
-
-          </div>
-
-        </div>
-
-      </section>
-
-      {/* =====================================
           APPLICATION FORM
           ===================================== */}
       <section className="bg-white">
 
         <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+
+          <div className="mb-10 max-w-4xl">
+
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#941f25]">
+              Heritage Boxing Entertainment
+            </p>
+
+            <h1 className="mt-3 text-3xl font-black uppercase leading-tight text-[#171717] sm:text-4xl lg:text-5xl">
+              Official Boxer Application
+            </h1>
+
+            <div className="mt-5 h-1 w-20 bg-[#c6a24a]" />
+
+            <p className="mt-6 max-w-3xl leading-8 text-[#5f5b55]">
+              Professional and debut fighters can submit their boxing profile for consideration by Heritage Boxing Entertainment. Complete the application as accurately as possible for review by the HBE administration team.
+            </p>
+
+          </div>
 
           {/* SUCCESS */}
           {success && (
