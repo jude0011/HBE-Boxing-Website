@@ -83,6 +83,9 @@ type BoxerApplication = {
   why_hbe: string | null;
 
   photo_url: string | null;
+
+  is_read: boolean;
+  read_at: string | null;
 };
 
 type PhotoMap = Record<
@@ -456,6 +459,83 @@ export default function BoxerApplicationsAdminPage() {
 
     void loadApplications();
   }, [supabase]);
+
+  async function toggleApplicationDetails(
+    application: BoxerApplication
+  ) {
+    if (
+      expandedId ===
+      application.id
+    ) {
+      setExpandedId(
+        null
+      );
+
+      return;
+    }
+
+    setExpandedId(
+      application.id
+    );
+
+    if (
+      !application.is_read
+    ) {
+      const now =
+        new Date()
+          .toISOString();
+
+      const {
+        error:
+          readError,
+      } =
+        await supabase
+          .from(
+            "boxer_applications"
+          )
+          .update({
+            is_read:
+              true,
+
+            read_at:
+              now,
+          })
+          .eq(
+            "id",
+            application.id
+          );
+
+      if (
+        readError
+      ) {
+        console.error(
+          "Unable to mark boxer application as read:",
+          readError
+        );
+
+        return;
+      }
+
+      setApplications(
+        (current) =>
+          current.map(
+            (item) =>
+              item.id ===
+              application.id
+                ? {
+                    ...item,
+
+                    is_read:
+                      true,
+
+                    read_at:
+                      now,
+                  }
+                : item
+          )
+      );
+    }
+  }
 
   function findDivisionId(
     divisionName:
@@ -1322,10 +1402,8 @@ export default function BoxerApplicationsAdminPage() {
                       <button
                         type="button"
                         onClick={() =>
-                          setExpandedId(
-                            expanded
-                              ? null
-                              : application.id
+                          void toggleApplicationDetails(
+                            application
                           )
                         }
                         className="bg-[#c6a24a] px-5 py-3 text-xs font-black uppercase text-[#171717] transition hover:bg-[#b08d39]"
