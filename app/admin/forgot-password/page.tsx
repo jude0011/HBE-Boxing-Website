@@ -1,158 +1,232 @@
 "use client";
 
+import {
+  FormEvent,
+  useMemo,
+  useState,
+} from "react";
+
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { createClient } from "@/app/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] =
+  const supabase =
+    useMemo(
+      () => createClient(),
+      []
+    );
+
+  const router =
+    useRouter();
+
+  const [
+    email,
+    setEmail,
+  ] =
     useState("");
 
-  const [loading, setLoading] =
+  const [
+    submitting,
+    setSubmitting,
+  ] =
     useState(false);
 
-  const [message, setMessage] =
+  const [
+    message,
+    setMessage,
+  ] =
     useState("");
 
-  const [error, setError] =
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] =
     useState("");
 
   async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
+    event:
+      FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
-    setLoading(true);
-    setMessage("");
-    setError("");
+    const cleanEmail =
+      email
+        .trim()
+        .toLowerCase();
 
-    const supabase =
-      createClient();
-
-    const redirectTo =
-      `${window.location.origin}/admin/reset-password`;
-
-    const {
-      error: resetError,
-    } =
-      await supabase.auth.resetPasswordForEmail(
-        email
-          .trim()
-          .toLowerCase(),
-        {
-          redirectTo,
-        }
+    if (!cleanEmail) {
+      setErrorMessage(
+        "Enter your administrator email address."
       );
-
-    if (resetError) {
-      setError(
-        resetError.message
-      );
-
-      setLoading(false);
       return;
     }
 
-    setMessage(
-      "If an HBE administrator account exists for that email address, a password reset link has been sent."
+    setSubmitting(true);
+    setMessage("");
+    setErrorMessage("");
+
+    const {
+      error,
+    } =
+      await supabase.auth
+        .resetPasswordForEmail(
+          cleanEmail
+        );
+
+    if (error) {
+      console.error(
+        "Password recovery error:",
+        error
+      );
+
+      /*
+        Keep the response intentionally
+        generic so the page does not
+        reveal whether an email exists.
+      */
+      setMessage(
+        "If that email belongs to an HBE administrator, a 6-digit reset code has been sent."
+      );
+
+      setSubmitting(false);
+      return;
+    }
+
+    /*
+      Save the email for this browser
+      and also pass it in the URL so
+      the reset page can prefill it.
+    */
+    sessionStorage.setItem(
+      "hbe_reset_email",
+      cleanEmail
     );
 
-    setLoading(false);
+    setMessage(
+      "Reset code sent. Opening the verification page..."
+    );
+
+    setTimeout(
+      () => {
+        router.push(
+          `/admin/reset-password?email=${encodeURIComponent(
+            cleanEmail
+          )}`
+        );
+      },
+      650
+    );
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#171717] px-4 py-12">
+    <main className="flex min-h-screen items-center justify-center bg-[#f7f4ef] px-4 py-12 text-[#171717]">
 
-      <div className="w-full max-w-md overflow-hidden border border-white/10 bg-white shadow-2xl">
+      <section className="w-full max-w-[540px] overflow-hidden border border-[#e1ddd6] bg-white shadow-[0_22px_60px_rgba(0,0,0,0.12)]">
 
-        {/* TOP */}
-        <div className="border-b-4 border-[#c6a24a] bg-[#941f25] px-8 py-8">
+        {/* HBE HEADER */}
+        <div className="border-b-4 border-[#c6a24a] bg-[#941f25] px-8 py-9 sm:px-10">
 
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#e0c273]">
+          <p className="text-xs font-black uppercase tracking-[0.32em] text-[#c6a24a]">
             Heritage Boxing Entertainment
           </p>
 
-          <h1 className="mt-3 text-3xl font-black uppercase text-white">
+          <h1 className="mt-2 text-3xl font-black uppercase text-white">
             HBE Admin
           </h1>
 
         </div>
 
-        {/* CONTENT */}
-        <div className="p-8">
+        <div className="px-8 py-10 sm:px-10">
 
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#941f25]">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#941f25]">
             Account Recovery
           </p>
 
-          <h2 className="mt-3 text-2xl font-black uppercase text-[#171717]">
-            Forgot Password
+          <h2 className="mt-3 text-3xl font-black uppercase">
+            Forgot Password?
           </h2>
 
-          <p className="mt-3 text-sm leading-6 text-[#6c675f]">
-            Enter the email address connected
-            to your HBE administrator account.
-            We will send you a password reset
-            link.
+          <div className="mt-4 h-1 w-16 bg-[#c6a24a]" />
+
+          <p className="mt-5 leading-7 text-[#625d56]">
+            Enter the email address connected to your HBE administrator account. We will email you a 6-digit verification code.
           </p>
 
           <form
-            onSubmit={handleSubmit}
-            className="mt-7"
+            onSubmit={
+              handleSubmit
+            }
+            className="mt-8"
           >
 
-            <label className="text-xs font-black uppercase tracking-wide text-[#5f5b55]">
-              Email Address
+            <label
+              htmlFor="email"
+              className="block text-xs font-black uppercase tracking-[0.12em] text-[#625d56]"
+            >
+              Administrator Email
             </label>
 
             <input
+              id="email"
               type="email"
-              required
               autoComplete="email"
+              required
               value={email}
-              onChange={(event) =>
+              onChange={(
+                event
+              ) =>
                 setEmail(
                   event.target.value
                 )
               }
-              className="mt-2 w-full border border-[#d8d3cb] px-4 py-3 text-base text-[#171717] outline-none transition focus:border-[#941f25]"
+              placeholder="admin@example.com"
+              className="mt-2 w-full border border-[#d8d2ca] bg-white px-4 py-4 text-lg outline-none transition focus:border-[#941f25] focus:ring-2 focus:ring-[#941f25]/10"
             />
-
-            {message && (
-              <div className="mt-5 border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold leading-6 text-green-700">
-                {message}
-              </div>
-            )}
-
-            {error && (
-              <div className="mt-5 border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                {error}
-              </div>
-            )}
 
             <button
               type="submit"
-              disabled={loading}
-              className="mt-7 w-full bg-[#941f25] px-6 py-4 text-sm font-black uppercase tracking-wider text-white transition hover:bg-[#74181d] disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={submitting}
+              className="mt-7 flex min-h-[58px] w-full items-center justify-center bg-[#941f25] px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white transition hover:bg-[#74181d] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading
-                ? "Sending..."
-                : "Send Reset Link"}
+              {submitting
+                ? "Sending Code..."
+                : "Send Reset Code"}
             </button>
 
           </form>
 
-          <Link
-            href="/admin/login"
-            className="mt-6 block text-center text-xs font-black uppercase tracking-wide text-[#625d56] transition hover:text-[#941f25]"
-          >
-            ← Back to Login
-          </Link>
+          {message && (
+
+            <div className="mt-6 border border-green-200 bg-green-50 p-5 text-sm font-semibold leading-6 text-green-800">
+              {message}
+            </div>
+
+          )}
+
+          {errorMessage && (
+
+            <div className="mt-6 border border-red-200 bg-red-50 p-5 text-sm font-semibold leading-6 text-red-800">
+              {errorMessage}
+            </div>
+
+          )}
+
+          <div className="mt-8 border-t border-[#e5e0d8] pt-6">
+
+            <Link
+              href="/admin/login"
+              className="text-sm font-black uppercase tracking-wide text-[#941f25] hover:text-[#74181d]"
+            >
+              ← Back To Admin Login
+            </Link>
+
+          </div>
 
         </div>
 
-      </div>
+      </section>
 
     </main>
   );

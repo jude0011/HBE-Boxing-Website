@@ -1,337 +1,775 @@
 "use client";
 
-import Link from "next/link";
-
 import {
+  ClipboardEvent,
   FormEvent,
-  useEffect,
+  KeyboardEvent,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 
 import { createClient } from "@/app/lib/supabase/client";
 
-export default function ResetPasswordPage() {
-  const router =
-    useRouter();
+const CODE_LENGTH = 6;
 
+export default function ResetPasswordPage() {
   const supabase =
     useMemo(
       () => createClient(),
       []
     );
 
-  const [password, setPassword] =
+  const router =
+    useRouter();
+
+  const searchParams =
+    useSearchParams();
+
+  const inputRefs =
+    useRef<
+      Array<HTMLInputElement | null>
+    >([]);
+
+  const initialEmail =
+    (
+      searchParams.get(
+        "email"
+      ) ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+  const [
+    email,
+    setEmail,
+  ] =
+    useState(
+      initialEmail
+    );
+
+  const [
+    digits,
+    setDigits,
+  ] =
+    useState<string[]>(
+      Array(CODE_LENGTH).fill("")
+    );
+
+  const [
+    verified,
+    setVerified,
+  ] =
+    useState(false);
+
+  const [
+    verifying,
+    setVerifying,
+  ] =
+    useState(false);
+
+  const [
+    saving,
+    setSaving,
+  ] =
+    useState(false);
+
+  const [
+    newPassword,
+    setNewPassword,
+  ] =
     useState("");
 
   const [
     confirmPassword,
     setConfirmPassword,
-  ] = useState("");
-
-  const [ready, setReady] =
-    useState(false);
-
-  const [checking, setChecking] =
-    useState(true);
-
-  const [saving, setSaving] =
-    useState(false);
-
-  const [error, setError] =
+  ] =
     useState("");
 
-  const [message, setMessage] =
+  const [
+    message,
+    setMessage,
+  ] =
     useState("");
 
-  useEffect(() => {
-    async function prepareRecovery() {
-      setError("");
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] =
+    useState("");
 
-      /*
-        PKCE PASSWORD RECOVERY
+  const token =
+    digits.join("");
 
-        Supabase can return:
-        /admin/reset-password?code=...
-
-        Exchange the code for a session
-        before allowing password update.
-      */
-      const params =
-        new URLSearchParams(
-          window.location.search
-        );
-
-      const code =
-        params.get("code");
-
-      if (code) {
-        const {
-          error: exchangeError,
-        } =
-          await supabase.auth.exchangeCodeForSession(
-            code
-          );
-
-        if (exchangeError) {
-          setError(
-            "This password reset link is invalid or has expired. Please request a new reset link."
-          );
-
-          setChecking(false);
-          return;
-        }
-
-        window.history.replaceState(
-          {},
-          document.title,
-          "/admin/reset-password"
-        );
-      }
-
-      /*
-        CHECK RECOVERY SESSION
-      */
-      const {
-        data: {
-          session,
-        },
-        error: sessionError,
-      } =
-        await supabase.auth.getSession();
-
-      if (
-        sessionError ||
-        !session
-      ) {
-        setError(
-          "No valid password recovery session was found. Please request a new reset link."
-        );
-
-        setChecking(false);
-        return;
-      }
-
-      setReady(true);
-      setChecking(false);
-    }
-
-    void prepareRecovery();
-  }, [supabase]);
-
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
+  function focusBox(
+    index: number
   ) {
-    event.preventDefault();
+    inputRefs.current[
+      index
+    ]?.focus();
+  }
 
-    setSaving(true);
-    setError("");
+  function updateDigit(
+    index: number,
+    value: string
+  ) {
+    const number =
+      value
+        .replace(
+          /\D/g,
+          ""
+        )
+        .slice(-1);
+
+    const next =
+      [...digits];
+
+    next[index] =
+      number;
+
+    setDigits(
+      next
+    );
+
+    setErrorMessage("");
     setMessage("");
 
     if (
-      password.length < 8
+      number &&
+      index <
+        CODE_LENGTH - 1
     ) {
-      setError(
-        "Password must be at least 8 characters."
+      focusBox(
+        index + 1
+      );
+    }
+  }
+
+  function handleKeyDown(
+    index: number,
+    event:
+      KeyboardEvent<HTMLInputElement>
+  ) {
+    if (
+      event.key ===
+        "Backspace" &&
+      !digits[index] &&
+      index > 0
+    ) {
+      focusBox(
+        index - 1
+      );
+    }
+
+    if (
+      event.key ===
+        "ArrowLeft" &&
+      index > 0
+    ) {
+      event.preventDefault();
+      focusBox(
+        index - 1
+      );
+    }
+
+    if (
+      event.key ===
+        "ArrowRight" &&
+      index <
+        CODE_LENGTH - 1
+    ) {
+      event.preventDefault();
+      focusBox(
+        index + 1
+      );
+    }
+  }
+
+  function handlePaste(
+    event:
+      ClipboardEvent<HTMLInputElement>
+  ) {
+    event.preventDefault();
+
+    const pasted =
+      event.clipboardData
+        .getData("text")
+        .replace(
+          /\D/g,
+          ""
+        )
+        .slice(
+          0,
+          CODE_LENGTH
+        );
+
+    if (!pasted) {
+      return;
+    }
+
+    const next =
+      Array(
+        CODE_LENGTH
+      ).fill("");
+
+    pasted
+      .split("")
+      .forEach(
+        (
+          value,
+          index
+        ) => {
+          next[index] =
+            value;
+        }
       );
 
-      setSaving(false);
+    setDigits(
+      next
+    );
+
+    const focusIndex =
+      Math.min(
+        pasted.length,
+        CODE_LENGTH
+      ) - 1;
+
+    focusBox(
+      Math.max(
+        focusIndex,
+        0
+      )
+    );
+  }
+
+  async function verifyCode(
+    event:
+      FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    const cleanEmail =
+      email
+        .trim()
+        .toLowerCase();
+
+    if (!cleanEmail) {
+      setErrorMessage(
+        "Enter the administrator email address that received the code."
+      );
       return;
     }
 
     if (
-      password !==
-      confirmPassword
+      token.length !==
+      CODE_LENGTH
     ) {
-      setError(
-        "Passwords do not match."
+      setErrorMessage(
+        "Enter all 6 digits of the reset code."
       );
-
-      setSaving(false);
       return;
     }
+
+    setVerifying(true);
+    setErrorMessage("");
+    setMessage("");
 
     const {
-      error: updateError,
+      data,
+      error,
     } =
-      await supabase.auth.updateUser(
-        {
-          password,
-        }
+      await supabase.auth
+        .verifyOtp({
+          email:
+            cleanEmail,
+          token,
+          type:
+            "recovery",
+        });
+
+    if (
+      error ||
+      !data.user
+    ) {
+      console.error(
+        "Recovery code verification error:",
+        error
       );
 
-    if (updateError) {
-      setError(
-        updateError.message
+      setErrorMessage(
+        "That reset code is invalid or has expired. Request a new code and try again."
+      );
+
+      setVerifying(false);
+      return;
+    }
+
+    /*
+      ADMIN-ONLY SAFETY CHECK
+    */
+    const {
+      data:
+        adminUser,
+      error:
+        adminError,
+    } =
+      await supabase
+        .from(
+          "admin_users"
+        )
+        .select(
+          "id, role"
+        )
+        .eq(
+          "id",
+          data.user.id
+        )
+        .maybeSingle();
+
+    if (
+      adminError ||
+      !adminUser
+    ) {
+      await supabase.auth
+        .signOut();
+
+      setErrorMessage(
+        "This account is not authorized for HBE administration."
+      );
+
+      setVerifying(false);
+      return;
+    }
+
+    setVerified(true);
+
+    setMessage(
+      "Code verified. You can now create your new HBE admin password."
+    );
+
+    setVerifying(false);
+  }
+
+  async function updatePassword(
+    event:
+      FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    setErrorMessage("");
+    setMessage("");
+
+    if (
+      newPassword.length <
+      8
+    ) {
+      setErrorMessage(
+        "Your new password must be at least 8 characters."
+      );
+      return;
+    }
+
+    if (
+      newPassword !==
+      confirmPassword
+    ) {
+      setErrorMessage(
+        "The two passwords do not match."
+      );
+      return;
+    }
+
+    setSaving(true);
+
+    const {
+      error,
+    } =
+      await supabase.auth
+        .updateUser({
+          password:
+            newPassword,
+        });
+
+    if (error) {
+      console.error(
+        "Password update error:",
+        error
+      );
+
+      setErrorMessage(
+        error.message
       );
 
       setSaving(false);
       return;
     }
 
+    /*
+      Clear the recovery session so the
+      admin signs in normally afterward.
+    */
+    await supabase.auth
+      .signOut();
+
+    sessionStorage.removeItem(
+      "hbe_reset_email"
+    );
+
     setMessage(
-      "Your password has been updated successfully. Returning you to the HBE Admin login."
+      "Password changed successfully. Returning to HBE Admin Login..."
     );
 
     setSaving(false);
 
-    await supabase.auth.signOut();
-
-    setTimeout(() => {
-      router.replace(
-        "/admin/login"
-      );
-    }, 1500);
+    setTimeout(
+      () => {
+        router.replace(
+          "/admin/login"
+        );
+      },
+      1200
+    );
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#171717] px-4 py-12">
+    <main className="flex min-h-screen items-center justify-center bg-[#f7f4ef] px-4 py-12 text-[#171717]">
 
-      <div className="w-full max-w-md overflow-hidden border border-white/10 bg-white shadow-2xl">
+      <section className="w-full max-w-[590px] overflow-hidden border border-[#e1ddd6] bg-white shadow-[0_22px_60px_rgba(0,0,0,0.12)]">
 
-        {/* TOP */}
-        <div className="border-b-4 border-[#c6a24a] bg-[#941f25] px-8 py-8">
+        {/* HBE HEADER */}
+        <div className="relative overflow-hidden border-b-4 border-[#c6a24a] bg-[#941f25] px-8 py-9 sm:px-10">
 
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#e0c273]">
-            Heritage Boxing Entertainment
-          </p>
+          <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full border-[18px] border-white/5" />
 
-          <h1 className="mt-3 text-3xl font-black uppercase text-white">
-            HBE Admin
-          </h1>
+          <div className="absolute -bottom-16 right-16 h-32 w-32 rounded-full border-[14px] border-[#c6a24a]/10" />
+
+          <div className="relative">
+
+            <p className="text-xs font-black uppercase tracking-[0.32em] text-[#c6a24a]">
+              Heritage Boxing Entertainment
+            </p>
+
+            <h1 className="mt-2 text-3xl font-black uppercase text-white">
+              Password Recovery
+            </h1>
+
+          </div>
 
         </div>
 
-        {/* CONTENT */}
-        <div className="p-8">
+        <div className="px-8 py-10 sm:px-10">
 
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#941f25]">
-            Account Recovery
-          </p>
+          {!verified ? (
+            <>
 
-          <h2 className="mt-3 text-2xl font-black uppercase text-[#171717]">
-            Create New Password
-          </h2>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-[#941f25]">
+                Security Check
+              </p>
 
-          <p className="mt-3 text-sm leading-6 text-[#6c675f]">
-            Enter a new password for your
-            HBE administrator account.
-          </p>
+              <h2 className="mt-3 text-3xl font-black uppercase">
+                Enter Your Code
+              </h2>
 
-          {checking && (
-            <div className="mt-6 border border-[#e2ddd5] bg-[#f7f4ef] px-4 py-4 text-sm font-semibold text-[#625d56]">
-              Verifying your password reset link...
-            </div>
-          )}
+              <div className="mt-4 h-1 w-16 bg-[#c6a24a]" />
 
-          {!checking &&
-            !ready &&
-            error && (
-              <>
-                <div className="mt-6 border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold leading-6 text-red-700">
-                  {error}
+              <p className="mt-5 leading-7 text-[#625d56]">
+                Enter the 6-digit code sent to your administrator email.
+              </p>
+
+              <form
+                onSubmit={
+                  verifyCode
+                }
+                className="mt-8"
+              >
+
+                <label
+                  htmlFor="recovery_email"
+                  className="block text-xs font-black uppercase tracking-[0.12em] text-[#625d56]"
+                >
+                  Administrator Email
+                </label>
+
+                <input
+                  id="recovery_email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(
+                    event
+                  ) =>
+                    setEmail(
+                      event.target.value
+                    )
+                  }
+                  className="mt-2 w-full border border-[#d8d2ca] bg-white px-4 py-4 outline-none transition focus:border-[#941f25]"
+                />
+
+                {/* FUN / INTERACTIVE 6-DIGIT CODE UI */}
+                <div className="mt-8">
+
+                  <p className="text-xs font-black uppercase tracking-[0.12em] text-[#625d56]">
+                    6-Digit Reset Code
+                  </p>
+
+                  <div className="mt-3 grid grid-cols-6 gap-2 sm:gap-3">
+
+                    {digits.map(
+                      (
+                        digit,
+                        index
+                      ) => (
+
+                        <input
+                          key={index}
+                          ref={(
+                            element
+                          ) => {
+                            inputRefs.current[
+                              index
+                            ] =
+                              element;
+                          }}
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete={
+                            index === 0
+                              ? "one-time-code"
+                              : "off"
+                          }
+                          maxLength={1}
+                          value={digit}
+                          onChange={(
+                            event
+                          ) =>
+                            updateDigit(
+                              index,
+                              event.target.value
+                            )
+                          }
+                          onKeyDown={(
+                            event
+                          ) =>
+                            handleKeyDown(
+                              index,
+                              event
+                            )
+                          }
+                          onPaste={
+                            handlePaste
+                          }
+                          aria-label={`Reset code digit ${
+                            index + 1
+                          }`}
+                          className={`aspect-square w-full border-2 text-center text-2xl font-black outline-none transition-all duration-200 sm:text-3xl ${
+                            digit
+                              ? "scale-[1.04] border-[#c6a24a] bg-[#fffaf0] text-[#941f25] shadow-[0_5px_16px_rgba(198,162,74,0.20)]"
+                              : "border-[#d8d2ca] bg-white text-[#171717] focus:-translate-y-1 focus:border-[#941f25] focus:shadow-[0_7px_18px_rgba(148,31,37,0.14)]"
+                          }`}
+                        />
+
+                      )
+                    )}
+
+                  </div>
+
+                  <div className="mt-4 flex items-center gap-3">
+
+                    <div
+                      className={`h-2 flex-1 overflow-hidden rounded-full bg-[#eee9e2]`}
+                    >
+                      <div
+                        className="h-full bg-[#c6a24a] transition-all duration-300"
+                        style={{
+                          width:
+                            `${(
+                              token.length /
+                              CODE_LENGTH
+                            ) *
+                              100}%`,
+                        }}
+                      />
+                    </div>
+
+                    <span className="text-xs font-black text-[#817a73]">
+                      {token.length}/6
+                    </span>
+
+                  </div>
+
                 </div>
 
-                <Link
-                  href="/admin/forgot-password"
-                  className="mt-6 block w-full bg-[#941f25] px-6 py-4 text-center text-sm font-black uppercase tracking-wide text-white transition hover:bg-[#74181d]"
+                <button
+                  type="submit"
+                  disabled={
+                    verifying ||
+                    token.length !==
+                      CODE_LENGTH
+                  }
+                  className="mt-8 flex min-h-[58px] w-full items-center justify-center bg-[#941f25] px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white transition hover:bg-[#74181d] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Request New Reset Link
-                </Link>
+                  {verifying
+                    ? "Verifying Code..."
+                    : "Verify Reset Code"}
+                </button>
 
-                <Link
-                  href="/admin/login"
-                  className="mt-5 block text-center text-xs font-black uppercase tracking-wide text-[#625d56] transition hover:text-[#941f25]"
+              </form>
+
+            </>
+          ) : (
+            <>
+
+              {/* SMALL CELEBRATION / SUCCESS ANIMATION */}
+              <div className="flex justify-center">
+
+                <div className="relative flex h-24 w-24 items-center justify-center">
+
+                  <div className="absolute inset-0 animate-ping rounded-full border-2 border-[#c6a24a]/30" />
+
+                  <div className="absolute inset-2 rounded-full border-4 border-[#c6a24a]" />
+
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#941f25] text-3xl font-black text-white shadow-lg">
+                    ✓
+                  </div>
+
+                </div>
+
+              </div>
+
+              <p className="mt-6 text-center text-xs font-black uppercase tracking-[0.22em] text-[#941f25]">
+                Identity Verified
+              </p>
+
+              <h2 className="mt-3 text-center text-3xl font-black uppercase">
+                Create New Password
+              </h2>
+
+              <p className="mx-auto mt-4 max-w-md text-center leading-7 text-[#625d56]">
+                Your verification code was accepted. Choose a new password for your HBE administrator account.
+              </p>
+
+              <form
+                onSubmit={
+                  updatePassword
+                }
+                className="mt-8"
+              >
+
+                <label
+                  htmlFor="new_password"
+                  className="block text-xs font-black uppercase tracking-[0.12em] text-[#625d56]"
                 >
-                  Back to Login
-                </Link>
-              </>
-            )}
-
-          {ready && (
-            <form
-              onSubmit={handleSubmit}
-              className="mt-7"
-            >
-
-              {/* NEW PASSWORD */}
-              <div>
-
-                <label className="text-xs font-black uppercase tracking-wide text-[#5f5b55]">
                   New Password
                 </label>
 
                 <input
+                  id="new_password"
                   type="password"
+                  autoComplete="new-password"
                   required
                   minLength={8}
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(event) =>
-                    setPassword(
+                  value={
+                    newPassword
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    setNewPassword(
                       event.target.value
                     )
                   }
-                  className="mt-2 w-full border border-[#d8d3cb] px-4 py-3 text-base text-[#171717] outline-none transition focus:border-[#941f25]"
+                  className="mt-2 w-full border border-[#d8d2ca] bg-white px-4 py-4 text-lg outline-none transition focus:border-[#941f25]"
                 />
 
-              </div>
-
-              {/* CONFIRM */}
-              <div className="mt-5">
-
-                <label className="text-xs font-black uppercase tracking-wide text-[#5f5b55]">
+                <label
+                  htmlFor="confirm_password"
+                  className="mt-6 block text-xs font-black uppercase tracking-[0.12em] text-[#625d56]"
+                >
                   Confirm New Password
                 </label>
 
                 <input
+                  id="confirm_password"
                   type="password"
+                  autoComplete="new-password"
                   required
                   minLength={8}
-                  autoComplete="new-password"
                   value={
                     confirmPassword
                   }
-                  onChange={(event) =>
+                  onChange={(
+                    event
+                  ) =>
                     setConfirmPassword(
                       event.target.value
                     )
                   }
-                  className="mt-2 w-full border border-[#d8d3cb] px-4 py-3 text-base text-[#171717] outline-none transition focus:border-[#941f25]"
+                  className="mt-2 w-full border border-[#d8d2ca] bg-white px-4 py-4 text-lg outline-none transition focus:border-[#941f25]"
                 />
 
-              </div>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="mt-8 flex min-h-[58px] w-full items-center justify-center bg-[#941f25] px-6 py-4 text-sm font-black uppercase tracking-[0.12em] text-white transition hover:bg-[#74181d] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving
+                    ? "Saving Password..."
+                    : "Save New Password"}
+                </button>
 
-              {error && (
-                <div className="mt-5 border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                  {error}
-                </div>
-              )}
+              </form>
 
-              {message && (
-                <div className="mt-5 border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold leading-6 text-green-700">
-                  {message}
-                </div>
-              )}
+            </>
+          )}
 
-              <button
-                type="submit"
-                disabled={saving}
-                className="mt-7 w-full bg-[#c6a24a] px-6 py-4 text-sm font-black uppercase tracking-wider text-[#171717] transition hover:bg-[#b08d39] disabled:cursor-not-allowed disabled:opacity-60"
+          {message && (
+
+            <div className="mt-6 border border-green-200 bg-green-50 p-5 text-sm font-semibold leading-6 text-green-800">
+              {message}
+            </div>
+
+          )}
+
+          {errorMessage && (
+
+            <div className="mt-6 border border-red-200 bg-red-50 p-5 text-sm font-semibold leading-6 text-red-800">
+              {errorMessage}
+            </div>
+
+          )}
+
+          {!verified && (
+
+            <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-[#e5e0d8] pt-6">
+
+              <Link
+                href="/admin/forgot-password"
+                className="text-sm font-black uppercase tracking-wide text-[#941f25] hover:text-[#74181d]"
               >
-                {saving
-                  ? "Updating..."
-                  : "Update Password"}
-              </button>
+                Send New Code
+              </Link>
 
-            </form>
+              <Link
+                href="/admin/login"
+                className="text-sm font-black uppercase tracking-wide text-[#625d56] hover:text-[#171717]"
+              >
+                Back To Login
+              </Link>
+
+            </div>
+
           )}
 
         </div>
 
-      </div>
+      </section>
 
     </main>
   );
