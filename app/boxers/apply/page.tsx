@@ -648,12 +648,6 @@ export default function BoxerApplicationPage() {
 
       form.reset();
 
-      window.scrollTo({
-        top: 0,
-        behavior:
-          "smooth",
-      });
-
     } catch (
       submissionError
     ) {
@@ -712,40 +706,6 @@ export default function BoxerApplicationPage() {
             </p>
 
           </div>
-
-          {/* SUCCESS */}
-          {success && (
-
-            <div className="mb-8 border border-green-200 bg-green-50 p-6 text-green-800">
-
-              <p className="font-black uppercase">
-                Application Submitted
-              </p>
-
-              <p className="mt-2 leading-7">
-                {success}
-              </p>
-
-            </div>
-
-          )}
-
-          {/* ERROR */}
-          {errorMessage && (
-
-            <div className="mb-8 border border-red-200 bg-red-50 p-6 text-red-800">
-
-              <p className="font-black uppercase">
-                Unable To Submit Application
-              </p>
-
-              <p className="mt-2 leading-7">
-                {errorMessage}
-              </p>
-
-            </div>
-
-          )}
 
           <form
             onSubmit={
@@ -1892,6 +1852,40 @@ export default function BoxerApplicationPage() {
                 directly to the HBE administration
                 team for review.
               </p>
+
+              {/* SUCCESS MESSAGE */}
+              {success && (
+
+                <div className="mt-6 border border-green-200 bg-green-50 p-6 text-green-800">
+
+                  <p className="font-black uppercase">
+                    Application Submitted
+                  </p>
+
+                  <p className="mt-2 leading-7">
+                    {success}
+                  </p>
+
+                </div>
+
+              )}
+
+              {/* ERROR MESSAGE */}
+              {errorMessage && (
+
+                <div className="mt-6 border border-red-200 bg-red-50 p-6 text-red-800">
+
+                  <p className="font-black uppercase">
+                    Unable To Submit Application
+                  </p>
+
+                  <p className="mt-2 leading-7">
+                    {errorMessage}
+                  </p>
+
+                </div>
+
+              )}
 
             </div>
 
